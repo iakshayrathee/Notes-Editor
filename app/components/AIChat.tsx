@@ -23,6 +23,7 @@ export default function AIChat({ noteId }: Props) {
   const messages = getMessages(noteId)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   const geminiAPI = async (prompt: string): Promise<string> => {
     try {
@@ -62,7 +63,6 @@ export default function AIChat({ noteId }: Props) {
   const handleSend = async () => {
     if (!input.trim()) return
 
-    // Add user message
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       content: input,
@@ -72,7 +72,6 @@ export default function AIChat({ noteId }: Props) {
     setInput("")
 
     try {
-      // Add loading message
       const loadingId = `assistant-${Date.now()}`
       const loadingMessage: Message = {
         id: loadingId,
@@ -82,7 +81,6 @@ export default function AIChat({ noteId }: Props) {
       }
       addMessage(noteId, loadingMessage)
 
-      // Build conversation history
       const conversationHistory = getMessages(noteId)
         .filter((msg) => !msg.isLoading)
         .map((msg) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`)
@@ -111,7 +109,11 @@ export default function AIChat({ noteId }: Props) {
   }
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    if (messagesEndRef.current && scrollAreaRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
+      console.log("ScrollArea height:", scrollAreaRef.current.getBoundingClientRect().height)
+      console.log("Messages count:", messages.length)
+    }
   }, [messages])
 
   useEffect(() => {
@@ -144,20 +146,12 @@ export default function AIChat({ noteId }: Props) {
       /```([\s\S]*?)```/g,
       '<pre class="bg-slate-100 p-3 rounded-md my-3 overflow-x-auto text-sm font-mono border border-slate-200">$1</pre>',
     )
-
-    // Format inline code
     content = content.replace(
       /`([^`]+)`/g,
       '<code class="bg-slate-100 px-1.5 py-0.5 rounded text-sm font-mono">$1</code>',
     )
-
-    // Format bold
     content = content.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-
-    // Format italic
     content = content.replace(/\*([^*]+)\*/g, "<em>$1</em>")
-
-    // line breaks
     content = content.replace(/\n/g, "<br>")
 
     return content
@@ -257,116 +251,119 @@ export default function AIChat({ noteId }: Props) {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <ScrollArea className="flex-1 p-4 h-[calc(70vh-6rem)]" scrollHideDelay={300}>
-                    {messages.length === 0 ? (
-                      <motion.div
-                        className="h-full flex flex-col items-center justify-center text-center p-4"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                      >
+                  <ScrollArea
+                    ref={scrollAreaRef}
+                    className="p-4 overflow-y-auto flex-1"
+                    style={{ height: "calc(70vh - 9rem)", maxHeight: "calc(70vh - 9rem)" }}
+                  >
+                    <div className="min-h-full">
+                      {messages.length === 0 && (
                         <motion.div
-                          initial={{ scale: 0.8, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{
-                            type: "spring",
-                            stiffness: 400,
-                            damping: 20,
-                            delay: 0.3,
-                          }}
-                          className="bg-slate-100 rounded-full p-4 mb-4"
-                        >
-                          <Sparkles className="h-8 w-8 text-slate-500" />
-                        </motion.div>
-                        <motion.h3
-                          className="text-slate-800 font-medium mb-1"
-                          initial={{ opacity: 0, y: 10 }}
+                          className="flex flex-col items-center text-center p-4 mt-4"
+                          initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.4 }}
+                          transition={{ delay: 0.2 }}
                         >
-                          AI Assistant
-                        </motion.h3>
-                        <motion.p
-                          className="text-slate-500 text-sm"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.5 }}
-                        >
-                          Ask me anything about your notes or how I can help you.
-                        </motion.p>
-                      </motion.div>
-                    ) : (
-                      <div className="space-y-4 overflow-y-auto">
-                        {messages.map((msg, index) => (
                           <motion.div
-                            key={msg.id}
-                            className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 400,
+                              damping: 20,
+                              delay: 0.3,
+                            }}
+                            className="bg-slate-100 rounded-full p-4 mb-4"
+                          >
+                            <Sparkles className="h-8 w-8 text-slate-500" />
+                          </motion.div>
+                          <motion.h3
+                            className="text-slate-800 font-medium mb-1"
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.05 }}
+                            transition={{ delay: 0.4 }}
                           >
-                            {msg.role === "assistant" && (
-                              <Avatar className="h-8 w-8 mr-2 mt-1 flex-shrink-0">
-                                <AvatarFallback className="bg-slate-200 text-slate-800 text-xs">AI</AvatarFallback>
-                                <AvatarImage src="/placeholder.svg?height=40&width=40" />
-                              </Avatar>
+                            AI Assistant
+                          </motion.h3>
+                          <motion.p
+                            className="text-slate-500 text-sm"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.5 }}
+                          >
+                            Ask me anything about your notes or how I can help you.
+                          </motion.p>
+                        </motion.div>
+                      )}
+                      {messages.map((msg, index) => (
+                        <motion.div
+                          key={msg.id}
+                          className={cn("flex mb-4", msg.role === "user" ? "justify-end" : "justify-start")}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                        >
+                          {msg.role === "assistant" && (
+                            <Avatar className="h-8 w-8 mr-2 mt-1 flex-shrink-0">
+                              <AvatarFallback className="bg-slate-200 text-slate-800 text-xs">AI</AvatarFallback>
+                              <AvatarImage src="/placeholder.svg?height=40&width=40" />
+                            </Avatar>
+                          )}
+                          <motion.div
+                            className={cn(
+                              "max-w-[80%] rounded-lg p-3 text-sm shadow-sm break-words",
+                              msg.role === "user"
+                                ? "bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-tr-none"
+                                : "bg-slate-100 text-slate-800 rounded-tl-none border border-slate-200",
                             )}
-                            <motion.div
-                              className={cn(
-                                "max-w-[80%] rounded-lg p-3 text-sm shadow-sm",
-                                msg.role === "user"
-                                  ? "bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-tr-none"
-                                  : "bg-slate-100 text-slate-800 rounded-tl-none border border-slate-200",
-                              )}
-                              initial={{ scale: 0.95 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                            >
-                              {msg.isLoading ? (
-                                <div className="flex space-x-1 items-center h-5">
-                                  <motion.div
-                                    className="w-1.5 h-1.5 bg-slate-400 rounded-full"
-                                    animate={{ y: [0, -5, 0] }}
-                                    transition={{
-                                      duration: 0.6,
-                                      repeat: Number.POSITIVE_INFINITY,
-                                      repeatType: "loop",
-                                      ease: "easeInOut",
-                                      delay: 0,
-                                    }}
-                                  />
-                                  <motion.div
-                                    className="w-1.5 h-1.5 bg-slate-400 rounded-full"
-                                    animate={{ y: [0, -5, 0] }}
-                                    transition={{
-                                      duration: 0.6,
-                                      repeat: Number.POSITIVE_INFINITY,
-                                      repeatType: "loop",
-                                      ease: "easeInOut",
-                                      delay: 0.15,
-                                    }}
-                                  />
-                                  <motion.div
-                                    className="w-1.5 h-1.5 bg-slate-400 rounded-full"
-                                    animate={{ y: [0, -5, 0] }}
-                                    transition={{
-                                      duration: 0.6,
-                                      repeat: Number.POSITIVE_INFINITY,
-                                      repeatType: "loop",
-                                      ease: "easeInOut",
-                                      delay: 0.3,
-                                    }}
-                                  />
-                                </div>
-                              ) : (
-                                <div dangerouslySetInnerHTML={{ __html: formatMessage(msg.content) }} />
-                              )}
-                            </motion.div>
+                            initial={{ scale: 0.95 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                          >
+                            {msg.isLoading ? (
+                              <div className="flex space-x-1 items-center h-5">
+                                <motion.div
+                                  className="w-1.5 h-1.5 bg-slate-400 rounded-full"
+                                  animate={{ y: [0, -5, 0] }}
+                                  transition={{
+                                    duration: 0.6,
+                                    repeat: Number.POSITIVE_INFINITY,
+                                    repeatType: "loop",
+                                    ease: "easeInOut",
+                                    delay: 0,
+                                  }}
+                                />
+                                <motion.div
+                                  className="w-1.5 h-1.5 bg-slate-400 rounded-full"
+                                  animate={{ y: [0, -5, 0] }}
+                                  transition={{
+                                    duration: 0.6,
+                                    repeat: Number.POSITIVE_INFINITY,
+                                    repeatType: "loop",
+                                    ease: "easeInOut",
+                                    delay: 0.15,
+                                  }}
+                                />
+                                <motion.div
+                                  className="w-1.5 h-1.5 bg-slate-400 rounded-full"
+                                  animate={{ y: [0, -5, 0] }}
+                                  transition={{
+                                    duration: 0.6,
+                                    repeat: Number.POSITIVE_INFINITY,
+                                    repeatType: "loop",
+                                    ease: "easeInOut",
+                                    delay: 0.3,
+                                  }}
+                                />
+                              </div>
+                            ) : (
+                              <div dangerouslySetInnerHTML={{ __html: formatMessage(msg.content) }} />
+                            )}
                           </motion.div>
-                        ))}
-                        <div ref={messagesEndRef} />
-                      </div>
-                    )}
+                        </motion.div>
+                      ))}
+                      <div ref={messagesEndRef} />
+                    </div>
                   </ScrollArea>
 
                   <motion.div

@@ -60,7 +60,11 @@ export default function NoteEditor() {
             transition={{ duration: 0.3, delay: 0.6 }}
           >
             <Button
-              onClick={() => addNote()}
+              onClick={() => {
+                const newNoteId = addNote();
+                // Set the current note to the newly created note
+                useStore.getState().setCurrentNoteId(newNoteId);
+              }}
               className="flex items-center gap-2 bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 transition-all duration-300 px-6 py-6 w-full h-6"
               size="lg"
             >
