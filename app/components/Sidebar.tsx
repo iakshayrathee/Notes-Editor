@@ -143,102 +143,104 @@ export default function Sidebar() {
         </TooltipProvider>
       </div>
 
-      <ScrollArea className="flex-1 px-2">
-        <AnimatePresence>
-          {sortedNotes.length === 0 ? (
-            <motion.div 
-              className="text-center py-4 text-slate-500 text-sm"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
+      <ScrollArea className="flex-1 px-3 overflow-visible"> {/* Increased padding, added overflow-visible */}
+  <AnimatePresence>
+    {sortedNotes.length === 0 ? (
+      <motion.div 
+        className="text-center py-4 text-slate-500 text-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+      >
+        {searchTerm ? "No matching notes" : "No notes yet"}
+      </motion.div>
+    ) : (
+      <motion.ul 
+        className="space-y-1 py-2"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ staggerChildren: 0.05 }}
+      >
+        {sortedNotes.map((note, index) => (
+          <motion.li 
+            key={note.id} 
+            className="relative group w-full" // Full width for positioning
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.03 }}
+            onMouseEnter={() => setHoveredNoteId(note.id)}
+            onMouseLeave={() => setHoveredNoteId(null)}
+          >
+            <Button
+              variant="ghost"
+              onClick={() => setCurrentNoteId(note.id)}
+              className={cn(
+                "w-full justify-start font-normal transition-all duration-200 pr-10", 
+                isCollapsed ? "px-2" : "px-3",
+                currentNoteId === note.id 
+                  ? "bg-slate-200 text-slate-900" 
+                  : "hover:bg-slate-100 text-slate-700 hover:text-slate-900",
+                "rounded-lg relative"
+              )}
             >
-              {searchTerm ? "No matching notes" : "No notes yet"}
-            </motion.div>
-          ) : (
-            <motion.ul 
-              className="space-y-1 py-2"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ staggerChildren: 0.05 }}
-            >
-              {sortedNotes.map((note, index) => (
-                <motion.li 
-                  key={note.id} 
-                  className="relative group"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.03 }}
-                  onMouseEnter={() => setHoveredNoteId(note.id)}
-                  onMouseLeave={() => setHoveredNoteId(null)}
-                >
-                  <Button
-                    variant="ghost"
-                    onClick={() => setCurrentNoteId(note.id)}
-                    className={cn(
-                      "w-full justify-start font-normal transition-all duration-200",
-                      isCollapsed ? "px-2" : "px-3",
-                      currentNoteId === note.id 
-                        ? "bg-slate-200 text-slate-900" 
-                        : "hover:bg-slate-100 text-slate-700 hover:text-slate-900",
-                      "rounded-lg"
-                    )}
+              <FileText className={cn(
+                "h-4 w-4 transition-all flex-shrink-0",
+                !isCollapsed && "mr-2",
+                currentNoteId === note.id ? "text-slate-800" : "text-slate-500"
+              )} />
+              
+              <AnimatePresence>
+                {!isCollapsed && (
+                  <motion.span 
+                    className="truncate flex-1 text-left max-w-[calc(100%-2rem)]"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
                   >
-                    <FileText className={cn(
-                      "h-4 w-4 transition-all", 
-                      !isCollapsed && "mr-2",
-                      currentNoteId === note.id ? "text-slate-800" : "text-slate-500"
-                    )} />
-                    
-                    <AnimatePresence>
-                      {!isCollapsed && (
-                        <motion.span 
-                          className="truncate"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                        >
-                          {note.title || "Untitled"}
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </Button>
+                    {window.matchMedia('(max-width: 768px)').matches 
+                      ? index + 1 
+                      : note.title || "Untitled"} 
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </Button>
 
-                  <AnimatePresence>
-                    {!isCollapsed && (hoveredNoteId === note.id || window.matchMedia('(max-width: 768px)').matches) && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute right-1 top-1"
-                      >
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteNote(note.id);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Delete note</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.li>
-              ))}
-            </motion.ul>
-          )}
-        </AnimatePresence>
-      </ScrollArea>
+            <AnimatePresence>
+              {!isCollapsed && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-1 z-10" 
+                >
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors flex-shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteNote(note.id);
+                          }}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Delete note</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.li>
+        ))}
+      </motion.ul>
+    )}
+  </AnimatePresence>
+</ScrollArea>
 
       <AnimatePresence>
         {!isCollapsed && (
