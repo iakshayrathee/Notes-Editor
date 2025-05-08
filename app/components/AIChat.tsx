@@ -23,7 +23,6 @@ export default function AIChat({ noteId }: Props) {
   const messages = getMessages(noteId)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const [isTyping, setIsTyping] = useState(false)
 
   const geminiAPI = async (prompt: string): Promise<string> => {
     try {
@@ -258,7 +257,7 @@ export default function AIChat({ noteId }: Props) {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <ScrollArea className="flex-1 p-4">
+                  <ScrollArea className="flex-1 p-4 h-[calc(70vh-6rem)]" scrollHideDelay={300}>
                     {messages.length === 0 ? (
                       <motion.div
                         className="h-full flex flex-col items-center justify-center text-center p-4"
@@ -297,7 +296,7 @@ export default function AIChat({ noteId }: Props) {
                         </motion.p>
                       </motion.div>
                     ) : (
-                      <div className="space-y-4">
+                      <div className="space-y-4 overflow-y-auto">
                         {messages.map((msg, index) => (
                           <motion.div
                             key={msg.id}
