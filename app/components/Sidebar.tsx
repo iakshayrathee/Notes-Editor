@@ -20,7 +20,7 @@ export default function Sidebar() {
 
   const sortedNotes = [...filteredNotes].sort((a, b) => {
     const dateA = a.lastModified ? new Date(a.lastModified).getTime() : 0
-    const dateB = b.lastModified ? new Date(a.lastModified).getTime() : 0
+    const dateB = b.lastModified ? new Date(b.lastModified).getTime() : 0
     return dateB - dateA
   })
 
